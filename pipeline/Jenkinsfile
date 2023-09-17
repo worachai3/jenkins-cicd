@@ -4,7 +4,7 @@ pipeline {
     environment {
         AWS_REGION = 'us-east-1'
         AWS_CREDENTIALS = credentials('aws-credentials') // The ID of your AWS credentials in Jenkins
-        ECR_REPOSITORY = 'https://568406210619.dkr.ecr.us-east-1.amazonaws.com'
+        ECR_REPOSITORY = '568406210619.dkr.ecr.us-east-1.amazonaws.com'
         EB_APP_NAME = 'simple-web-app'
         EB_ENV_NAME = 'dev'
         DOCKER_IMAGE_NAME = 'simple-web-app-img'
@@ -24,7 +24,15 @@ pipeline {
                 echo 'Building Docker image...'
                 // Build the Docker image from the Dockerfile in your repository
                 script {
-                    dockerImage = docker.build("${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}")
+                    // Authenticate Docker with ECR using AWS CLI
+                    def loginCmd = "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY"
+                    sh loginCmd
+
+                    // Build the Docker image if not already built (replace 'simple_web_app' with your actual image name)
+                    def buildCmd = "docker build -t simple_web_app ."
+                    if (!fileExists("simple_web_app")) {
+                        sh buildCmd
+                    }
                 }
             }
         }
@@ -32,14 +40,18 @@ pipeline {
         stage('Push Docker Image to ECR') {
             steps {
                 echo 'Pushing Docker image to ECR...'
-                // Push the Docker image to Amazon ECR
                 script {
-                    docker.withRegistry('${ECR_REPOSITORY}', 'ecr:us-east-1:simple_web_app') {
-                        dockerImage.push()
-                    }
+                    // Tag the Docker image
+                    def tagCmd = "docker tag simple_web_app:latest ${ECR_REPOSITORY}/simple_web_app:latest"
+                    sh tagCmd
+
+                    // Push the Docker image to ECR
+                    def pushCmd = "docker push ${ECR_REPOSITORY}/simple_web_app:latest"
+                    sh pushCmd
                 }
             }
         }
+
 
         stage('Deploy to Elastic Beanstalk') {
             steps {
