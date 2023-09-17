@@ -35,7 +35,7 @@ pipeline {
                 echo 'Pushing Docker image to ECR...'
                 script {
                     sh """aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY}"""
-                    sh """docker tag ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ${ECR_REPOSITORY}:${BUILD_NUMBER}"""
+                    sh """docker tag ${DOCKER_IMAGE_NAME} ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"""
                     sh """docker push ${ECR_REPOSITORY}:${BUILD_NUMBER}"""
                 }
             }
@@ -46,8 +46,8 @@ pipeline {
             steps {
                 echo 'Deploying containerized app to Elastic Beanstalk...'
                 withAWS(credentials: AWS_CREDENTIALS, region: AWS_REGION) {
-                    sh "eb init -r $AWS_REGION -i $ECR_REPOSITORY -p docker $EB_APP_NAME --region $AWS_REGION"
-                    sh "eb use $EB_ENV_NAME"
+                    sh "eb init -r ${AWS_REGION} -i $ECR_REPOSITORY -p docker $EB_APP_NAME --region ${AWS_REGION}"
+                    sh "eb use ${EB_ENV_NAME}"
                     sh 'eb deploy'
                 }
             }
