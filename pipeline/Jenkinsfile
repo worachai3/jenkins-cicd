@@ -4,7 +4,7 @@ pipeline {
     environment {
         AWS_REGION = 'us-east-1'
         AWS_CREDENTIALS = credentials('aws-credentials') // The ID of your AWS credentials in Jenkins
-        ECR_REPOSITORY = 'simple_web_app'
+        ECR_REPOSITORY = 'https://568406210619.dkr.ecr.us-east-1.amazonaws.com'
         EB_APP_NAME = 'simple-web-app'
         EB_ENV_NAME = 'dev'
         DOCKER_IMAGE_NAME = 'simple-web-app-img'
@@ -34,7 +34,7 @@ pipeline {
                 echo 'Pushing Docker image to ECR...'
                 // Push the Docker image to Amazon ECR
                 script {
-                    docker.withRegistry('https://568406210619.dkr.ecr.us-east-1.amazonaws.com', 'ecr:us-east-1:simple_web_app') {
+                    docker.withRegistry('${ECR_REPOSITORY}', 'ecr:us-east-1:simple_web_app') {
                         dockerImage.push()
                     }
                 }
