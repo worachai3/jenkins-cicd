@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_REGION = 'us-east-1'
-        ECR_REPOSITORY = '568406210619.dkr.ecr.us-east-1.amazonaws.com'
+        ECR_REPOSITORY = 'https://568406210619.dkr.ecr.us-east-1.amazonaws.com'
         EB_APP_NAME = 'simple-web-app'
         EB_ENV_NAME = 'dev'
         DOCKER_IMAGE_NAME = 'simple-web-app-img'
@@ -33,13 +33,23 @@ pipeline {
             steps {
                 echo 'Pushing Docker image to ECR...'
                 script {
+                    // Use the AWS credentials from Jenkins for Docker authentication
                     withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
                                     string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')]) {
-                        sh "docker login -u AWS -p '${AWS_SECRET_ACCESS_KEY}' https://${ECR_REPOSITORY}"
+                        // Set up an environment variable for the AWS secret access key
+                        def awsSecretKey = env.AWS_SECRET_ACCESS_KEY
+
+                        // Authenticate Docker with ECR using environment variable and --password-stdin
+                        sh """
+                        echo $awsSecretKey | docker login -u AWS --password-stdin https://${ECR_REPOSITORY}
+                        """
+
+                        // Build, tag, and push the Docker image as previously demonstrated
                     }
                 }
             }
         }
+
 
 
         stage('Deploy to Elastic Beanstalk') {
