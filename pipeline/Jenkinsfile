@@ -34,6 +34,13 @@ pipeline {
                 echo 'Pushing Docker image to ECR...'
                 script {
                     sh """aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY}"""
+                    // Tag your Docker image with the ECR repository URI
+                    dockerImage.tag("${ECR_REPOSITORY}:${BUILD_NUMBER}")
+                    
+                    // Push the Docker image to ECR
+                    docker.withRegistry('https://' + ${ECR_REPOSITORY}, 'ecr:us-east-1:your-ecr-repository') {
+                    dockerImage.push()
+                    }
                 }
             }
         }
