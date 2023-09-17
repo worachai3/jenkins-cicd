@@ -11,10 +11,10 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+        stage('Fetch Code') {
             steps {
-                // Checkout your application code from Git
-                 checkout([$class: 'GitSCM', userRemoteConfigs: [[url: 'https://github.com/worachai3/simple-python-webapp.git']]])
+                // Fetch code from a GitHub repository
+                git branch: 'main', url: 'https://github.com/worachai3/simple-python-webapp.git'
             }
         }
 
