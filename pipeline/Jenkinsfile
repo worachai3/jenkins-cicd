@@ -35,7 +35,7 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
                                     string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')]) {
-                        sh "docker login -u AWS -p '${AWS_SECRET_ACCESS_KEY}' -e none https://${ECR_REPOSITORY}"
+                        sh "docker login -u AWS -p '${AWS_SECRET_ACCESS_KEY}' https://${ECR_REPOSITORY}"
                     }
                 }
             }
