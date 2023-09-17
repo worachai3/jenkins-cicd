@@ -19,14 +19,23 @@ pipeline {
             }
         }
 
-        stage('Build and Push Docker Image') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Building and pushing Docker image...'
-                // Use the Dockerfile in your repository to build and push the Docker image to Amazon ECR
+                echo 'Building Docker image...'
+                // Build the Docker image from the Dockerfile in your repository
                 script {
-                    docker.withRegistry('https://' + ECR_REPOSITORY, 'ecr:us-east-1:568406210619:repository/simple_web_app') {
-                        def customImage = docker.build("${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}")
-                        customImage.push()
+                    dockerImage = docker.build("${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}")
+                }
+            }
+        }
+
+        stage('Push Docker Image to ECR') {
+            steps {
+                echo 'Pushing Docker image to ECR...'
+                // Push the Docker image to Amazon ECR
+                script {
+                    docker.withRegistry('https://568406210619.dkr.ecr.us-east-1.amazonaws.com', 'ecr:us-east-1:simple_web_app') {
+                        dockerImage.push()
                     }
                 }
             }
@@ -34,14 +43,12 @@ pipeline {
 
         stage('Deploy to Elastic Beanstalk') {
             steps {
-                script {
-                    echo 'Deploying containerized app to Elastic Beanstalk...'
-                    // Deploy your containerized app to Elastic Beanstalk
-                    withAWS(credentials: AWS_CREDENTIALS, region: AWS_REGION) {
-                        sh "eb init -r $AWS_REGION -i $ECR_REPOSITORY -p docker $EB_APP_NAME --region $AWS_REGION"
-                        sh "eb use $EB_ENV_NAME"
-                        sh 'eb deploy'
-                    }
+                echo 'Deploying containerized app to Elastic Beanstalk...'
+                // Deploy your containerized app to Elastic Beanstalk
+                withAWS(credentials: AWS_CREDENTIALS, region: AWS_REGION) {
+                    sh "eb init -r $AWS_REGION -i $ECR_REPOSITORY -p docker $EB_APP_NAME --region $AWS_REGION"
+                    sh "eb use $EB_ENV_NAME"
+                    sh 'eb deploy'
                 }
             }
         }
