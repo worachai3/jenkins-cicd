@@ -45,8 +45,6 @@ pipeline {
         stage('Deploy') {
                 steps {
                     echo 'Deploying to ec2...'
-                    sh "cd terraform"
-                    sh "pwd"
                     sh "ls -la"
                     sh "terraform init"
                     sh "terraform destroy -auto-approve"
