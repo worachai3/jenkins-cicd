@@ -43,13 +43,12 @@ pipeline {
 
         stage('Deploy to Elastic Beanstalk') {
             steps {
-                echo 'Deploying containerized app to Elastic Beanstalk...'
+                    echo 'Deploying containerized app to Elastic Beanstalk...'
                     sh "eb init -r ${AWS_REGION} -i ${ECR_REPOSITORY} -p docker ${EB_APP_NAME} --region ${AWS_REGION}"
                     sh "eb use ${EB_ENV_NAME}"
                     sh 'eb deploy'
                 }
             }
-        }
     }
     post {
         success {
