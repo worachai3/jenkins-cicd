@@ -47,7 +47,9 @@ pipeline {
                     echo 'Deploying to ec2...'
                     sh "ls -la"
                     sh "terraform init"
+                    sh "echo Terminate any running instances..."
                     sh "terraform destroy -auto-approve -var 'AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}' -var 'AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -var 'AWS_REGION=${AWS_REGION} -var 'ECR_REPOSITORY=${ECR_REPOSITORY}'"
+                    sh "echo Deploying new instances..."
                     sh "terraform apply -auto-approve -var 'AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}' -var 'AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -var 'AWS_REGION=${AWS_REGION} -var 'ECR_REPOSITORY=${ECR_REPOSITORY}'"
                 }
             }
