@@ -8,7 +8,6 @@ pipeline {
         EB_ENV_NAME = 'dev'
         DOCKER_IMAGE_NAME = 'simple-web-app-img'
         AWS_ACCOUNT_ID = '568406210619'
-        IMAGE_REPO_NAME = 'simple-web-app-img'
     }
 
     stages {
@@ -35,8 +34,8 @@ pipeline {
                 echo 'Pushing Docker image to ECR...'
                 script {
                     sh """aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY}"""
-                    sh """docker tag ${DOCKER_IMAGE_NAME} ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"""
-                    sh """docker push ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"""
+                    sh """docker tag ${DOCKER_IMAGE_NAME} ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"""
+                    sh """docker push ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"""
                 }
             }
         }
