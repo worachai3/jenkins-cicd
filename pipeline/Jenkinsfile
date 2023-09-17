@@ -1,22 +1,66 @@
-pipeline{
+pipeline {
     agent any
-    stages{
-        stage("Fetch code from git"){
-            steps{
-                git branch: 'paac', url: 'https://github.com/worachai3/vprofile-project.git'
+
+    environment {
+        AWS_REGION = 'your-aws-region'
+        AWS_CREDENTIALS = credentials('aws-credentials') // The ID of your AWS credentials in Jenkins
+        ECR_REPOSITORY = 'simple_web_app'
+        EB_APP_NAME = 'simple-web-app'
+        EB_ENV_NAME = 'dev'
+        DOCKER_IMAGE_NAME = 'simple-web-app-img'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout your application code from Git
+                 checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/worachai3/simple-python-webapp.git']]])
             }
         }
+        stage('Build and Push Docker Image') {
+            steps {
+                script {
+                    // Authenticate Docker with ECR
+                    withCredentials([usernamePassword(credentialsId: AWS_CREDENTIALS, usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY"
+                    }
 
-        stage("Build"){
-            steps{
-                sh "mvn install"
+                    // Build and tag your Docker image
+                    def dockerImage = docker.build("${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}")
+
+                    // Tag your Docker image with the ECR repository URI
+                    def ecrTag = "${ECR_REPOSITORY}:${BUILD_NUMBER}"
+                    dockerImage.tag(ecrTag)
+
+                    // Push the Docker image to ECR
+                    docker.withRegistry('https://' + ECR_REPOSITORY, 'ecr:us-east-1:your-ecr-repository') {
+                        dockerImage.push()
+                    }
+                }
             }
         }
-
-        stage("Test"){
-            steps{
-                sh "mvn test"
+        stage('Deploy to Elastic Beanstalk') {
+            steps {
+                script {
+                    // Deploy your containerized app to Elastic Beanstalk
+                    withAWS(credentials: AWS_CREDENTIALS, region: AWS_REGION) {
+                        sh "eb init -r $AWS_REGION -i $ECR_REPOSITORY -p docker $EB_APP_NAME --region $AWS_REGION"
+                        sh "eb use $EB_ENV_NAME"
+                        sh 'eb deploy'
+                    }
+                }
             }
+        }
+    }
+
+    post {
+        success {
+            // Notify success
+            echo 'Pipeline succeeded!'
+        }
+        failure {
+            // Notify failure
+            echo 'Pipeline failed!'
         }
     }
 }
