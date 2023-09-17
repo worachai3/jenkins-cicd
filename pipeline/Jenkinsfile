@@ -35,18 +35,21 @@ pipeline {
                 script {
                     sh """aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY}"""
                     sh """docker tag ${DOCKER_IMAGE_NAME} ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"""
+                    sh """docker tag ${DOCKER_IMAGE_NAME} ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:latest"""
                     sh """docker push ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"""
+                    sh """docker push ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:latest"""
                 }
             }
         }
 
 
-        stage('Deploy to Elastic Beanstalk') {
-            steps {
-                    echo 'Deploying containerized app to Elastic Beanstalk...'
-                    sh "eb init -r ${AWS_REGION} -i ${ECR_REPOSITORY} -p docker ${EB_APP_NAME} --region ${AWS_REGION}"
-                    sh "eb use ${EB_ENV_NAME}"
-                    sh 'eb deploy'
+        stage('Deploy') {
+                steps {
+                    echo 'Deploying to ec2...'
+                    sh "cd terraform"
+                    sh "terraform init"
+                    sh "terraform destroy -auto-approve"
+                    sh "terraform apply -auto-approve"
                 }
             }
     }
