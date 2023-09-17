@@ -35,11 +35,12 @@ pipeline {
                 echo 'Pushing Docker image to ECR...'
                 script {
                     sh """aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY}"""
-                    sh """docker tag ${IMAGE_REPO_NAME}:${BUILD_NUMBER} ${IMAGE_REPO_NAME}:${BUILD_NUMBER}"""
-                    sh """docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${BUILD_NUMBER}"""
+                    sh """docker tag ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ${ECR_REPOSITORY}:${BUILD_NUMBER}"""
+                    sh """docker push ${ECR_REPOSITORY}:${BUILD_NUMBER}"""
                 }
             }
         }
+
 
         stage('Deploy to Elastic Beanstalk') {
             steps {
