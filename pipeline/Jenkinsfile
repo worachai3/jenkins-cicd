@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = 'your-aws-region'
+        AWS_REGION = 'us-east-1'
         AWS_CREDENTIALS = credentials('aws-credentials') // The ID of your AWS credentials in Jenkins
         ECR_REPOSITORY = 'simple_web_app'
         EB_APP_NAME = 'simple-web-app'
@@ -17,6 +17,7 @@ pipeline {
                  checkout([$class: 'GitSCM', userRemoteConfigs: [[url: 'https://github.com/worachai3/simple-python-webapp.git']]])
             }
         }
+
         stage('Build and Push Docker Image') {
             steps {
                 script {
@@ -39,6 +40,7 @@ pipeline {
                 }
             }
         }
+
         stage('Deploy to Elastic Beanstalk') {
             steps {
                 script {
