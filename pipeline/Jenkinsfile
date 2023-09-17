@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_REGION = 'us-east-1'
-        ECR_REPOSITORY = 'https://568406210619.dkr.ecr.us-east-1.amazonaws.com'
+        ECR_REPOSITORY = '568406210619.dkr.ecr.us-east-1.amazonaws.com'
         EB_APP_NAME = 'simple-web-app'
         EB_ENV_NAME = 'dev'
         DOCKER_IMAGE_NAME = 'simple-web-app-img'
