@@ -33,7 +33,10 @@ pipeline {
             steps {
                 echo 'Pushing Docker image to ECR...'
                 script {
-                        sh "aws --region ${AWS_REGION} ecr get-login-password --region region | docker login --username AWS --password-stdin https://${ECR_REPOSITORY}"
+                    withEnv (["AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_EKY_ID}", "AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}"]) {
+                        // sh "aws --region ${AWS_REGION} ecr get-login-password | docker login --username AWS --password-stdin https://${ECR_REPOSITORY}"
+                        sh "docker login -u AWS -p ${aws ecr get-login-password --region ${AWS_REGION}} ${ECR_REPOSITORY}"
+                    }
                 }
             }
         }
