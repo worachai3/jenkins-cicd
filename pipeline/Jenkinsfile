@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         AWS_REGION = 'us-east-1'
-        AWS_CREDENTIALS = credentials('aws-credentials') // The ID of your AWS credentials in Jenkins
         ECR_REPOSITORY = '568406210619.dkr.ecr.us-east-1.amazonaws.com'
         EB_APP_NAME = 'simple-web-app'
         EB_ENV_NAME = 'dev'
@@ -14,7 +13,6 @@ pipeline {
         stage('Fetch Code') {
             steps {
                 echo 'Fetching code from GitHub repository...'
-                // Fetch code from a GitHub repository
                 git branch: 'main', url: 'https://github.com/worachai3/simple-python-webapp.git'
             }
         }
@@ -22,9 +20,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo 'Building Docker image...'
-                // Build the Docker image from the Dockerfile in your repository
                 script {
-                        // Build the Docker image if not already built (replace 'simple_web_app' with your actual image name)
                         def buildCmd = "docker build -t simple_web_app ."
                         if (!fileExists("simple_web_app")) {
                             sh buildCmd
@@ -37,27 +33,18 @@ pipeline {
             steps {
                 echo 'Pushing Docker image to ECR...'
                 script {
-                    // Authenticate Docker with ECR using AWS Credentials from Jenkins
-                    withCredentials([aws(credentialsId: AWS_CREDENTIALS, region: AWS_REGION)]) {
-                        // Authenticate Docker with ECR
-                        sh "docker login -u AWS -p ${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY} -e none https://${ECR_REPOSITORY}"
-
-                        // Tag the Docker image
-                        def tagCmd = "docker tag simple_web_app:latest ${ECR_REPOSITORY}/simple_web_app:latest"
-                        sh tagCmd
-                        
-                        // Push the Docker image to ECR
-                        def pushCmd = "docker push ${ECR_REPOSITORY}/simple_web_app:latest"
-                        sh pushCmd
+                    withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
+                                    string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh "docker login -u AWS -p '${AWS_SECRET_ACCESS_KEY}' -e none https://${ECR_REPOSITORY}"
                     }
                 }
             }
         }
 
+
         stage('Deploy to Elastic Beanstalk') {
             steps {
                 echo 'Deploying containerized app to Elastic Beanstalk...'
-                // Deploy your containerized app to Elastic Beanstalk
                 withAWS(credentials: AWS_CREDENTIALS, region: AWS_REGION) {
                     sh "eb init -r $AWS_REGION -i $ECR_REPOSITORY -p docker $EB_APP_NAME --region $AWS_REGION"
                     sh "eb use $EB_ENV_NAME"
