@@ -24,14 +24,11 @@ pipeline {
                 echo 'Building Docker image...'
                 // Build the Docker image from the Dockerfile in your repository
                 script {
-                    // Authenticate Docker with ECR using AWS CLI
-                    def loginCmd = "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY"
-                    sh loginCmd
-
-                    // Build the Docker image if not already built (replace 'simple_web_app' with your actual image name)
-                    def buildCmd = "docker build -t simple_web_app ."
-                    if (!fileExists("simple_web_app")) {
-                        sh buildCmd
+                        // Build the Docker image if not already built (replace 'simple_web_app' with your actual image name)
+                        def buildCmd = "docker build -t simple_web_app ."
+                        if (!fileExists("simple_web_app")) {
+                            sh buildCmd
+                        }
                     }
                 }
             }
@@ -41,16 +38,23 @@ pipeline {
             steps {
                 echo 'Pushing Docker image to ECR...'
                 script {
-                    // Tag the Docker image
-                    def tagCmd = "docker tag simple_web_app:latest ${ECR_REPOSITORY}/simple_web_app:latest"
-                    sh tagCmd
+                    // Authenticate Docker with ECR using AWS Credentials from Jenkins
+                    withCredentials([aws(credentialsId: AWS_CREDENTIALS, region: AWS_REGION)]) {
+                        // Authenticate Docker with ECR
+                        sh "docker login -u AWS -p ${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY} -e none https://${ECR_REPOSITORY}"
 
-                    // Push the Docker image to ECR
-                    def pushCmd = "docker push ${ECR_REPOSITORY}/simple_web_app:latest"
-                    sh pushCmd
+                        // Tag the Docker image
+                        def tagCmd = "docker tag simple_web_app:latest ${ECR_REPOSITORY}/simple_web_app:latest"
+                        sh tagCmd
+                        
+                        // Push the Docker image to ECR
+                        def pushCmd = "docker push ${ECR_REPOSITORY}/simple_web_app:latest"
+                        sh pushCmd
+                    }
                 }
             }
         }
+
 
 
         stage('Deploy to Elastic Beanstalk') {
