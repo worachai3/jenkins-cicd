@@ -34,12 +34,9 @@ pipeline {
                 echo 'Pushing Docker image to ECR...'
                 script {
                         sh "aws --region ${AWS_REGION} ecr get-login-password --region region | docker login --username AWS --password-stdin https://${ECR_REPOSITORY}"
-                    }
                 }
             }
         }
-
-
 
         stage('Deploy to Elastic Beanstalk') {
             steps {
@@ -52,7 +49,6 @@ pipeline {
             }
         }
     }
-
     post {
         success {
             // Notify success
@@ -64,3 +60,4 @@ pipeline {
         }
     }
 }
+
