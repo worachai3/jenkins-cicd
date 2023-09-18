@@ -33,6 +33,8 @@ pipeline {
             steps {
                 echo 'Pushing Docker image to ECR...'
                 script {
+                    sh """export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"""
+                    sh """export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"""
                     sh """aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY}"""
                     sh """docker tag ${DOCKER_IMAGE_NAME} ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"""
                     sh """docker tag ${DOCKER_IMAGE_NAME} ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:latest"""
