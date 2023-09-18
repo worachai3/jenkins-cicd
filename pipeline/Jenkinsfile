@@ -27,7 +27,7 @@ pipeline {
                         sh """aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY}"""
                         if (!fileExists("${DOCKER_IMAGE_NAME}")) {
                             sh 'echo Build Docker image...'
-                            sh "/usr/bin/docker build -t ${DOCKER_IMAGE_NAME} ."
+                            sh "docker build -t ${DOCKER_IMAGE_NAME} ."
                         }
                     }
                 }
@@ -38,10 +38,10 @@ pipeline {
                 echo 'Pushing Docker image to ECR...'
                 script {
                     sh 'echo Pushing Docker image to ECR...'
-                    sh """/usr/bin/docker tag ${DOCKER_IMAGE_NAME} ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"""
-                    sh """/usr/bin/docker tag ${DOCKER_IMAGE_NAME} ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:latest"""
-                    sh """/usr/bin/docker push ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"""
-                    sh """/usr/bin/docker push ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:latest"""
+                    sh """docker tag ${DOCKER_IMAGE_NAME} ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"""
+                    sh """docker tag ${DOCKER_IMAGE_NAME} ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:latest"""
+                    sh """docker push ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"""
+                    sh """docker push ${ECR_REPOSITORY}/${DOCKER_IMAGE_NAME}:latest"""
                 }
             }
         }
