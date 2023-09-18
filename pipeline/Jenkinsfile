@@ -26,7 +26,7 @@ pipeline {
                 script {
                         sh """aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY}"""
                         if (!fileExists("${DOCKER_IMAGE_NAME}")) {
-                            sh 'Build Docker image...'
+                            sh 'echo Build Docker image...'
                             sh "/usr/bin/docker build -t ${DOCKER_IMAGE_NAME} ."
                         }
                     }
