@@ -1,6 +1,48 @@
 provider "aws" {
   region = "us-east-1"
 }
+# Create S3 bucket for backend state
+resource "aws_s3_bucket" "simple_web_app_backend_state" {
+  bucket = "simple-web-app-backend-state-worachai"
+  
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
+resource "aws_s3_bucket_versioning" "s3_backend_versioning" {
+  bucket = aws_s3_bucket.simple_web_app_backend_state.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "s3_backend_encryption" {
+  bucket = aws_s3_bucket.simple_web_app_backend_state.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+//Locking - DynamoDB
+resource "aws_dynamodb_table" "simple_web_app_backend_state_lock" {
+  name           = "simple-web-app-locks"
+  billing_mode   = "PAY_PER_REQUEST"
+  
+	hash_key = "LockID"
+	
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+}
+
+# Create ECR repository
+resource "aws_ecr_repository" "simple_web_app_ecr" {
+  name = "simple-web-app-ecr"
+}
 
 # create default vpc
 resource "aws_default_vpc" "default" {
@@ -36,11 +78,11 @@ resource "aws_security_group" "jenkins_sg" {
   }
 }
 
-# # create keypair for jenkins
-# resource "aws_key_pair" "jenkins_key" {
-#   key_name   = "jenkins-key"
-#   public_key = file("jenkins-key.pub")
-# }
+# create keypair for jenkins
+resource "aws_key_pair" "jenkins_key" {
+  key_name   = "jenkins-key"
+  public_key = file("jenkins-key.pub")
+}
 
 # create ec2 instance for jenkins
 resource "aws_instance" "jenkins" {
@@ -52,48 +94,6 @@ resource "aws_instance" "jenkins" {
     Name = "jenkins"
   }
   # userdata for install jenkins
-  user_data = <<-EOF
-              #!/bin/bash
- 
-              curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
-                /usr/share/keyrings/jenkins-keyring.asc > /dev/null
-              echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
-                https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
-                /etc/apt/sources.list.d/jenkins.list > /dev/null
-
-              sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
-
-              wget -O- https://apt.releases.hashicorp.com/gpg | \
-                gpg --dearmor | \
-                sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
-              echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
-              https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
-              sudo tee /etc/apt/sources.list.d/hashicorp.list
-
-              echo \
-                "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-                "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-                sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-              sudo apt-get update
-              sudo apt-get install ca-certificates curl gnupg
-              sudo install -m 0755 -d /etc/apt/keyrings
-              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-              sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-              sudo apt-get install openjdk-11-jdk -y
-              sudo apt-get install jenkins -y
-              sudo apt-get install openjdk-8-jdk -y
-              sudo apt-get install docker.io -y
-              sudo usermod -a -G docker jenkins
-              sudo apt-get install unzip -y
-              sudo apt-get install terraform -y
-
-              curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-              unzip awscliv2.zip
-              sudo ./aws/install
-              rm -rf aws*
-
-              sudo reboot
-              EOF
+  user_data = file("userdata.sh")
+  depends_on = [ aws_key_pair.jenkins_key, aws_security_group.jenkins_sg ]
 }
