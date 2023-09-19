@@ -41,7 +41,7 @@ resource "aws_dynamodb_table" "simple_web_app_backend_state_lock" {
 
 # Create ECR repository
 resource "aws_ecr_repository" "simple_web_app_ecr" {
-  name = "simple-web-app-ecr"
+  name = "simple-web-app"
 }
 
 # create default vpc
@@ -81,7 +81,7 @@ resource "aws_security_group" "jenkins_sg" {
 # create keypair for jenkins
 resource "aws_key_pair" "jenkins_key" {
   key_name   = "jenkins-key"
-  public_key = file("jenkins-key.pub")
+  public_key = file("~/Downloads/jenkins-key.pub")
 }
 
 # create ec2 instance for jenkins
