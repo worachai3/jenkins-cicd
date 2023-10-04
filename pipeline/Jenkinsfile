@@ -24,12 +24,14 @@ pipeline {
             steps {
                 echo 'Building Docker image...'
                 withVault(configuration: [timeout: 60, vaultCredentialId: 'vault-jenkins-role', vaultUrl: 'http://172.31.92.149:8200'], vaultSecrets: [[path: 'secret/aws', secretValues: [[envVar: 'AWS_ACCESS_KEY_ID', vaultKey: 'AWS_ACCESS_KEY_ID'], [envVar: 'AWS_SECRET_ACCESS_KEY', vaultKey: 'AWS_SECRET_ACCESS_KEY']]]]) {
-                    sh """ export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"""
-                    sh """ export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"""
-                    sh """aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY}"""
-                    if (!fileExists("${DOCKER_IMAGE_NAME}")) {
-                        sh 'echo Build Docker image...'
-                        sh "docker build -t ${DOCKER_IMAGE_NAME} ."
+                    script {
+                        sh """ export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"""
+                        sh """ export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"""
+                        sh """aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY}"""
+                        if (!fileExists("${DOCKER_IMAGE_NAME}")) {
+                            sh 'echo Build Docker image...'
+                            sh "docker build -t ${DOCKER_IMAGE_NAME} ."
+                        }
                     }
                 }
             }
