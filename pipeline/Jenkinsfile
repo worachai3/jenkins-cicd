@@ -8,12 +8,12 @@ pipeline {
         EB_ENV_NAME = 'dev'
         DOCKER_IMAGE_NAME = 'simple-web-app'
         AWS_ACCOUNT_ID = '568406210619'
-
     }
 
+    def VAULT_CONFIGURATION = [timeout: 60, vaultCredentialId: 'vault-jenkins-role', vaultUrl: 'http://172.31.95.5:8200']
+    def VAULT_SECRETS = [[path: 'secret/aws', secretValues: [[envVar: 'AWS_ACCESS_KEY_ID', vaultKey: 'AWS_ACCESS_KEY_ID'], [envVar: 'AWS_SECRET_ACCESS_KEY', vaultKey: 'AWS_SECRET_ACCESS_KEY']]]]
+
     stages {
-        def VAULT_CONFIGURATION = [timeout: 60, vaultCredentialId: 'vault-jenkins-role', vaultUrl: 'http://172.31.95.5:8200']
-        def VAULT_SECRETS = [[path: 'secret/aws', secretValues: [[envVar: 'AWS_ACCESS_KEY_ID', vaultKey: 'AWS_ACCESS_KEY_ID'], [envVar: 'AWS_SECRET_ACCESS_KEY', vaultKey: 'AWS_SECRET_ACCESS_KEY']]]]
 
         stage('Fetch Code') {
             steps {
