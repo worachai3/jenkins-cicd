@@ -8,7 +8,8 @@ pipeline {
         EB_ENV_NAME = 'dev'
         DOCKER_IMAGE_NAME = 'simple-web-app'
         AWS_ACCOUNT_ID = '568406210619'
-        VAULT_ADDR = 'http://172.31.95.5:8200'
+        VAULT_CONFIGURATION = "[timeout: 60, vaultCredentialId: 'vault-jenkins-role', vaultUrl: 'http://172.31.95.5:8200']"
+        VAULT_SECRETS = "[[path: 'secret/aws', secretValues: [[envVar: 'AWS_ACCESS_KEY_ID', vaultKey: 'AWS_ACCESS_KEY_ID'], [envVar: 'AWS_SECRET_ACCESS_KEY', vaultKey: 'AWS_SECRET_ACCESS_KEY']]]]"
     }
 
     stages {
@@ -22,7 +23,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo 'Building Docker image...'
-                withVault(configuration: [timeout: 60, vaultCredentialId: 'vault-jenkins-role', vaultUrl: '${VAULT_ADDR}'], vaultSecrets: [[path: 'secret/aws', secretValues: [[envVar: 'AWS_ACCESS_KEY_ID', vaultKey: 'AWS_ACCESS_KEY_ID'], [envVar: 'AWS_SECRET_ACCESS_KEY', vaultKey: 'AWS_SECRET_ACCESS_KEY']]]]) {
+                withVault(configuration: ${VAULT_CONFIGURATION}, vaultSecrets: ${VAULT_SECRETS}) {
                     script {
                         sh """ export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"""
                         sh """ export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"""
@@ -51,7 +52,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                withVault(configuration: [timeout: 60, vaultCredentialId: 'vault-jenkins-role', vaultUrl: '${VAULT_ADDR}'], vaultSecrets: [[path: 'secret/aws', secretValues: [[envVar: 'AWS_ACCESS_KEY_ID', vaultKey: 'AWS_ACCESS_KEY_ID'], [envVar: 'AWS_SECRET_ACCESS_KEY', vaultKey: 'AWS_SECRET_ACCESS_KEY']]]]) {
+                withVault(configuration: ${VAULT_CONFIGURATION}, vaultSecrets: ${VAULT_SECRETS}) {
                     script {
                         sh """ export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"""
                         sh """ export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"""
