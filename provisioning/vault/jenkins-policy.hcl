@@ -1,3 +1,3 @@
-path "secret/jenkins" {
+path "secret/*" {
     capabilities = ["read", "list"]
 }

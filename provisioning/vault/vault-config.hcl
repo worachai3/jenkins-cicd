@@ -4,7 +4,7 @@ listener "tcp" {
 }
 
 storage "file" {
-    path = "/vault/data"
+    path = "./vault/data"
 }
 
 disable_mlock = true

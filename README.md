@@ -40,7 +40,7 @@
         ```
     - Add secret
         ```bash
-        vault kv put secret/jenkins username="admin" password="admin"
+        vault kv put secret/aws AWS_ACCESS_KEY_ID="<AWS_ACCESS_KEY_ID>" AWS_SECRET_ACCESS_KEY="<AWS_SECRET_ACCESS_KEY>"
         ```
     - Create policy
         ```bash
@@ -78,7 +78,7 @@
 ** Troubleshooting **
 - Connection timeout to vault server
     - Check vault server is running
-    - Check vault host is correct (use private ip for aws ec2 in jenkins configuration)
+    - Check vault host is correct (use private ip for aws ec2 in jenkins configuration) ** Need to change every time when ec2 is reprovisioned
     - Check vault security group allow port 8200
 
 
